@@ -43,12 +43,17 @@ void test_load_mnist() {
     x = x.to(at::kFloat);
     y = y.to(at::kLong).squeeze(1);
 
+    auto x_train = x.slice(0, 0, 50000);
+    auto y_train = y.slice(0, 0, 50000);
+    auto x_dev = x.slice(0, 50001, 60001);
+    auto y_dev = y.slice(0, 50001, 60001);
+
     net->to(torch::Device(torch::kCUDA));
 
     auto optim = torch::optim::SGD(net->parameters(), 1e-3);
 
-    int batch_size = 16;
-    int nb_batch  = (int) ceil(double(x.size(0)) / double(batch_size));
+    int batch_size = 4;
+    int nb_batch  = (int) ceil(double(x_train.size(0)) / double(batch_size));
 
     int nb_epoch = 30;
 
@@ -56,13 +61,15 @@ void test_load_mnist() {
 
         float sum_loss = 0.f;
 
+        net->train();
+
         for (int b_idx = 0; b_idx < nb_batch; b_idx++) {
             int i_min = batch_size * b_idx;
             int i_max = batch_size * (b_idx + 1);
-            i_max = (int) (i_max > x.size(0) ? x.size(0) : i_max);
+            i_max = (int) (i_max > x_train.size(0) ? x_train.size(0) : i_max);
 
-            auto x_batch = x.slice(0, i_min, i_max).to(torch::Device(torch::kCUDA));
-            auto y_batch = y.slice(0, i_min, i_max).to(torch::Device(torch::kCUDA));
+            auto x_batch = x_train.slice(0, i_min, i_max).to(torch::Device(torch::kCUDA));
+            auto y_batch = y_train.slice(0, i_min, i_max).to(torch::Device(torch::kCUDA));
 
             optim.zero_grad();
 
@@ -77,8 +84,9 @@ void test_load_mnist() {
         }
         std::cout << "Epoch " << e << ", mean loss = " << (sum_loss / nb_batch) << std::endl;
 
-        std::cout << (net->forward(x.cuda()).argmax(1) == y.cuda()).sum().item().toDouble()
-            << " / " << x.size(0) << std::endl;
+        net->eval();
+        std::cout << (net->forward(x_dev.cuda()).argmax(1) == y_dev.cuda()).sum().item().toDouble()
+            << " / " << x_dev.size(0) << std::endl;
     }
 }
 
