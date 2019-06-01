@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "data/read_mnist.h"
+#include "models/conv_models.h"
 
 void test_tensor() {
     torch::Tensor tensor = torch::rand({2, 3});
@@ -13,6 +14,7 @@ void test_tensor() {
     auto b = torch::rand({500, 300}).cuda();
     auto c = torch::matmul(a, b);
     std::cout << c << std::endl;
+    std::cout << c.slice(0, 50, 75) << std::endl;
 }
 
 void test_load_mnist() {
@@ -34,8 +36,53 @@ void test_load_mnist() {
         }
         std::cout << std::endl;
     }
+
+    auto net = std::make_shared<MNIST_ConvNet>();
+
+    x = x.unsqueeze(1);
+    x = x.to(at::kFloat);
+    y = y.to(at::kLong).squeeze(1);
+
+    net->to(torch::Device(torch::kCUDA));
+
+    auto optim = torch::optim::SGD(net->parameters(), 1e-3);
+
+    int batch_size = 16;
+    int nb_batch  = (int) ceil(double(x.size(0)) / double(batch_size));
+
+    int nb_epoch = 30;
+
+    for (int e = 0; e < nb_epoch; e++) {
+
+        float sum_loss = 0.f;
+
+        for (int b_idx = 0; b_idx < nb_batch; b_idx++) {
+            int i_min = batch_size * b_idx;
+            int i_max = batch_size * (b_idx + 1);
+            i_max = (int) (i_max > x.size(0) ? x.size(0) : i_max);
+
+            auto x_batch = x.slice(0, i_min, i_max).to(torch::Device(torch::kCUDA));
+            auto y_batch = y.slice(0, i_min, i_max).to(torch::Device(torch::kCUDA));
+
+            optim.zero_grad();
+
+            auto pred = net->forward(x_batch);
+
+            auto loss = torch::nll_loss(pred, y_batch);
+            loss.backward();
+
+            optim.step();
+
+            sum_loss += loss.item().toDouble();
+        }
+        std::cout << "Epoch " << e << ", mean loss = " << (sum_loss / nb_batch) << std::endl;
+
+        std::cout << (net->forward(x.cuda()).argmax(1) == y.cuda()).sum().item().toDouble()
+            << " / " << x.size(0) << std::endl;
+    }
 }
 
 int main() {
     test_load_mnist();
+    //test_tensor();
 }
