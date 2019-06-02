@@ -26,7 +26,7 @@ void test_load_mnist() {
     torch::Tensor x = get_data(mnist);
     torch::Tensor y = get_labels(mnist);
 
-    std::cout << x.size(0) << ", " << x.size(1) << ", " << x.size(2) << std::endl;
+    std::cout << x.size(0) << ", " << x.size(1) << ", " << x.size(2) << ", " << x.size(3) << std::endl;
     std::cout << y.size(0) << std::endl;
 
     auto net = MNIST_ConvNet();
@@ -80,10 +80,17 @@ void test_load_mnist() {
 }
 
 void test_cifar() {
+    data_set cifar = read_cifar("./datasets/downloaded/cifar-10-batches-bin/data_batch_1.bin");
+    torch::Tensor x = get_data(cifar);
+    torch::Tensor y = get_labels(cifar);
 
+    std::cout << x.size(0) << ", " << x.size(1) << ", " << x.size(2) << ", " << x.size(3) << std::endl;
+    std::cout << y.size(0) << std::endl;
+    std::cout << x.max() << std::endl;
 }
 
 int main() {
-    test_load_mnist();
+    //test_load_mnist();
     //test_tensor();
+    test_cifar();
 }

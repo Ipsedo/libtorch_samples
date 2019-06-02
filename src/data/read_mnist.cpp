@@ -30,7 +30,7 @@ data_set read_mnist(std::string image_file_name, std::string label_file_name) {
         in_label.read(&curr_label, 1);
         int y = (unsigned int) curr_label;
 
-        labels.emplace_back(torch::tensor(at::ArrayRef<int>{y}));
+        labels.emplace_back(torch::tensor(y));
 
         in_data.read(curr_image, 28 * 28);
         unsigned char tmp[28 * 28];
