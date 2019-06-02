@@ -29,16 +29,23 @@ data_set read_mnist(std::string image_file_name, std::string label_file_name) {
     while (!in_data.eof()) {
         in_label.read(&curr_label, 1);
         int y = (unsigned int) curr_label;
+
         labels.emplace_back(torch::tensor(at::ArrayRef<int>{y}));
+
         in_data.read(curr_image, 28 * 28);
-        double tmp[28 * 28];
+        unsigned char tmp[28 * 28];
+
         for (int i = 0; i < 28 * 28; i++)
-            tmp[i] = (unsigned int) curr_image[i] / 255.;
-        images.emplace_back(torch::tensor(at::ArrayRef<double>(tmp)).view({28, 28}));
+            tmp[i] = (unsigned char) curr_image[i];
+
+        images.emplace_back(torch::tensor(at::ArrayRef<unsigned char>(tmp)).view({28, 28}));
     }
 
     torch::Tensor x = torch::stack(torch::TensorList(images), 0);
     torch::Tensor y = torch::stack(torch::TensorList(labels), 0);
+    x = x.to(torch::kFloat) / 255.f;
+    x = x.unsqueeze(1);
+    y = y.to(at::kLong).squeeze(1);
 
     return data_set(x, y);
 }
