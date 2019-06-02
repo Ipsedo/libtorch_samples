@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(libtorch_samples)
 
-set(CC gcc-7)
-set(CXX g++-7)
-
-set(CMAKE_PREFIX_PATH "/home/samuel/Programs/libtorch")
-set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda-9.2")
+set(CMAKE_PREFIX_PATH "/opt/libtorch")
 
 find_package(Torch REQUIRED)
 
