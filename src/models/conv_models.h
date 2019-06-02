@@ -9,16 +9,16 @@
 
 struct MNIST_ConvNet : torch::nn::Module {
     MNIST_ConvNet() {
-        c1 = register_module("c1", torch::nn::Conv2d(torch::nn::Conv2dOptions(1, 32, {3, 3})));
-        c2 = register_module("c2", torch::nn::Conv2d(torch::nn::Conv2dOptions(32, 64, {3, 3})));
+        c1 = register_module("c1", torch::nn::Conv2d(torch::nn::Conv2dOptions(1, 8, {3, 3})));
+        c2 = register_module("c2", torch::nn::Conv2d(torch::nn::Conv2dOptions(8, 16, {3, 3})));
 
-        l1 = register_module("l1", torch::nn::Linear(64 * 5 * 5, 10));
+        l1 = register_module("l1", torch::nn::Linear(16 * 5 * 5, 10));
     }
 
     torch::Tensor forward(torch::Tensor x) {
         x = torch::relu(torch::max_pool2d(c1->forward(x), {2, 2}, {2, 2}));
         x = torch::relu(torch::max_pool2d(c2->forward(x), {2, 2}, {2, 2}));
-        x = x.view({-1, 64 * 5 * 5});
+        x = x.view({x.size(0), 16 * 5 * 5});
         x = torch::softmax(l1->forward(x), 1);
         return x;
     }
