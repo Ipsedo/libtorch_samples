@@ -3,6 +3,7 @@
 
 #include "data/read_mnist.h"
 #include "models/conv_models.h"
+#include "models/linear_models.h"
 
 void test_tensor() {
     torch::Tensor tensor = torch::rand({2, 3});
@@ -27,30 +28,17 @@ void test_load_mnist() {
     std::cout << x.size(0) << ", " << x.size(1) << ", " << x.size(2) << std::endl;
     std::cout << y.size(0) << std::endl;
 
-    int idx_data = 60000;
-
-    std::cout << "Digit == " << y[idx_data].item().toDouble() << std::endl;
-    for (int i = 0; i < 28; i++) {
-        for (int j = 0; j < 28; j++) {
-            std::cout << (x[idx_data][i][j].item().toDouble() > 0.5 ? "#" : ".") << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    auto net = std::make_shared<MNIST_ConvNet>();
-
-    x = x.unsqueeze(1);
-    x = x.to(at::kFloat);
-    y = y.to(at::kLong).squeeze(1);
+    auto net = MNIST_ConvNet();
+    //auto net = MNIST_LinearNet();
 
     auto x_train = x.slice(0, 0, 50000);
     auto y_train = y.slice(0, 0, 50000);
     auto x_dev = x.slice(0, 50001, 60001);
     auto y_dev = y.slice(0, 50001, 60001);
 
-    net->to(torch::Device(torch::kCUDA));
+    net.to(torch::Device(torch::kCUDA));
 
-    auto optim = torch::optim::SGD(net->parameters(), 1e-3);
+    auto optim = torch::optim::SGD(net.parameters(), 1e-3);
 
     int batch_size = 4;
     int nb_batch  = (int) ceil(double(x_train.size(0)) / double(batch_size));
@@ -61,7 +49,7 @@ void test_load_mnist() {
 
         float sum_loss = 0.f;
 
-        net->train();
+        net.train();
 
         for (int b_idx = 0; b_idx < nb_batch; b_idx++) {
             int i_min = batch_size * b_idx;
@@ -73,19 +61,19 @@ void test_load_mnist() {
 
             optim.zero_grad();
 
-            auto pred = net->forward(x_batch);
+            auto pred = net.forward(x_batch);
 
             auto loss = torch::nll_loss(pred, y_batch);
-            loss.backward();
 
+            loss.backward();
             optim.step();
 
             sum_loss += loss.item().toDouble();
         }
         std::cout << "Epoch " << e << ", mean loss = " << (sum_loss / nb_batch) << std::endl;
 
-        net->eval();
-        std::cout << (net->forward(x_dev.cuda()).argmax(1) == y_dev.cuda()).sum().item().toDouble()
+        net.eval();
+        std::cout << (net.forward(x_dev.cuda()).argmax(1) == y_dev.cuda()).sum().item().toDouble()
             << " / " << x_dev.size(0) << std::endl;
     }
 }
