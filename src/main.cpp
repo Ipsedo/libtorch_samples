@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "data/read_mnist.h"
+#include "data/read_cifar10.h"
 #include "models/conv_models.h"
 #include "models/linear_models.h"
 
@@ -76,6 +77,10 @@ void test_load_mnist() {
         std::cout << (net.forward(x_dev.cuda()).argmax(1) == y_dev.cuda()).sum().item().toDouble()
             << " / " << x_dev.size(0) << std::endl;
     }
+}
+
+void test_cifar() {
+
 }
 
 int main() {
