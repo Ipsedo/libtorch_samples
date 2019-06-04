@@ -87,6 +87,21 @@ void test_cifar() {
     std::cout << x.size(0) << ", " << x.size(1) << ", " << x.size(2) << ", " << x.size(3) << std::endl;
     std::cout << y.size(0) << std::endl;
     std::cout << x.max() << std::endl;
+
+    double ratio = 0.8;
+
+    auto x_train = x.slice(0, 0, int(x.size(0) * ratio));
+    auto y_train = y.slice(0, 0, int(y.size(0) * ratio));
+
+    auto x_dev = x.slice(0, int(x.size(0) * ratio), x.size(0));
+    auto y_dev = y.slice(0, int(y.size(0) * ratio), y.size(0));
+
+    int batch_size = 4;
+    int nb_batch = int(ceil(x_train.size(0) / batch_size));
+
+    int nb_epoch = 10;
+
+
 }
 
 int main() {
