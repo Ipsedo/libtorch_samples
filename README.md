@@ -4,11 +4,11 @@
 
 ## Installation
 
-First you need to download and install [CUDA 9.2](https://developer.nvidia.com/cuda-92-download-archive) and [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive) (I use version 7.4.1).
+First you need to download and install [CUDA 9.0](https://developer.nvidia.com/cuda-90-download-archive) and [cuDNN](https://developer.nvidia.com/rdp/cudnn-archive) (I use version 7.4.1).
 
 Next download `libtorch` on [official website](https://pytorch.org/) with the correct version depending your CUDA version :
 ```bash
-$ # For CUDA 9.0 (works also fine with CUDA 9.2 !)
+$ # For CUDA 9.0
 $ wget https://download.pytorch.org/libtorch/cu90/libtorch-shared-with-deps-latest.zip
 ```
 Then place the extracted zip in the folder of your choice (`/opt/libtorch` for example).
@@ -22,7 +22,8 @@ $ git clone https://github.com/Ipsedo/libtorch_samples.git
 Build this repository with following commands :
 ```bash
 $ cd /path/to/libtorch_samples
-$ sh build.sh
+$ # Build with CUDA 9.0
+$ sh build_cu90.sh
 $ ./build/libtorch_samples
 ```
 
