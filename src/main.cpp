@@ -1,10 +1,12 @@
 #include <torch/torch.h>
 #include <iostream>
+#include <tqdm/tqdm.h>
 
 #include "data/read_mnist.h"
 #include "data/read_cifar10.h"
 #include "models/conv_models.h"
 #include "models/linear_models.h"
+
 
 void test_tensor() {
     torch::Tensor tensor = torch::rand({2, 3});
@@ -97,11 +99,47 @@ void test_cifar() {
     auto y_dev = y.slice(0, int(y.size(0) * ratio), y.size(0));
 
     int batch_size = 4;
-    int nb_batch = int(ceil(x_train.size(0) / batch_size));
+    int nb_batch = int(ceil(x_train.size(0) / double(batch_size)));
 
     int nb_epoch = 10;
 
+    auto m = CIFAR_ConvNet();
+    m.to(torch::kCUDA);
 
+    auto optim = torch::optim::SGD(m.parameters(), 1e-4);
+
+    for (int i = 0; i < nb_epoch; i++) {
+
+        double sum_loss = 0.0;
+
+        m.train();
+
+        for (int b : tqdm::range(0, nb_batch)) {
+            int i_min = batch_size * b;
+            int i_max = batch_size * (b + 1);
+            i_max = int(i_max > x_train.size(0) ? x_train.size(0) : i_max);
+
+            auto x_batch = x_train.slice(0, i_min, i_max).cuda();
+            auto y_batch = y_train.slice(0, i_min, i_max).cuda();
+
+            optim.zero_grad();
+
+            auto pred = m.forward(x_batch);
+
+            auto loss = torch::nll_loss(pred, y_batch);
+
+            loss.backward();
+            optim.step();
+
+            sum_loss += loss.item().toDouble();
+        }
+
+        std::cout << "Epoch " << i << ", mean loss = " << (sum_loss / nb_batch) << std::endl;
+
+        m.eval();
+        std::cout << (m.forward(x_dev.cuda()).argmax(1) == y_dev.cuda()).sum().item().toDouble()
+                  << " / " << x_dev.size(0) << std::endl;
+    }
 }
 
 int main() {

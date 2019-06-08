@@ -33,7 +33,8 @@ struct CIFAR_ConvNet : torch::nn::Module {
         int c2_ft_m = 32;
 
         linear_dim = int(
-                pow((32.0 - (conv_kernel_sizes[0] - 1.0)) / 2.0 - (conv_kernel_sizes[1] - 1.0), 2.0)
+                pow(((32.0 - (conv_kernel_sizes[0] - 1.0)) / maxpool_size[0] - (conv_kernel_sizes[1] - 1.0))
+                / maxpool_size[1], 2.0)
                 * c2_ft_m);
 
         c1 = register_module("c1",
@@ -75,8 +76,8 @@ struct CIFAR_ConvNet : torch::nn::Module {
     torch::nn::BatchNorm bn{nullptr};
 
     int linear_dim, nb_class = 10;
-    int conv_kernel_sizes[2]{5, 3};
-    int maxpool_size[2]{3, 2};
+    int conv_kernel_sizes[2]{5, 5};
+    int maxpool_size[2]{2, 2};
 };
 
 #endif //LIBTORCH_SAMPLES_CONV_MODELS_H
