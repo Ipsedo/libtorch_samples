@@ -22,9 +22,20 @@ $ git clone https://github.com/Ipsedo/libtorch_samples.git
 Build this repository with following commands :
 ```bash
 $ cd /path/to/libtorch_samples
-$ # Build with CUDA 9.0
-$ sh build_cu90.sh
-$ ./build/libtorch_samples
+$ # CUDA 9.0
+$ bash build_cu90.sh
+$ # CUDA 9.2
+$ bash build_cu92.sh
+```
+
+## Run
+You must run the executable in `libtorch_samples` root dir
+```bash
+$ cd /path/to/libtorch_samples
+$ # CUDA 9.0
+$ ./build_cu90/libtorch_samples
+$ # CUDA 9.2
+$ ./build_cu92/libtorch_samples
 ```
 
 ## Note
