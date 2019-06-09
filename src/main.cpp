@@ -82,13 +82,19 @@ void test_load_mnist() {
 }
 
 void test_cifar() {
-    data_set cifar = read_cifar("./datasets/downloaded/cifar-10-batches-bin/data_batch_1.bin");
-    torch::Tensor x = get_data(cifar);
-    torch::Tensor y = get_labels(cifar);
+    std::vector<torch::Tensor> x_list, y_list;
 
-    std::cout << x.size(0) << ", " << x.size(1) << ", " << x.size(2) << ", " << x.size(3) << std::endl;
-    std::cout << y.size(0) << std::endl;
-    std::cout << x.max() << std::endl;
+    for (int i = 1; i <= 5; i++) {
+        data_set cifar = read_cifar("./datasets/downloaded/cifar-10-batches-bin/data_batch_" + std::to_string(i) + ".bin");
+        x_list.push_back(get_data(cifar));
+        y_list.push_back(get_labels(cifar));
+    }
+
+    torch::Tensor x = torch::cat(torch::TensorList(x_list), 0);
+    torch::Tensor y = torch::cat(torch::TensorList(y_list), 0);
+
+    std::cout << x.sizes() << std::endl;
+    std::cout << y.sizes() << std::endl;
 
     double ratio = 0.8;
 
@@ -106,7 +112,7 @@ void test_cifar() {
     auto m = CIFAR_ConvNet();
     m.to(torch::kCUDA);
 
-    auto optim = torch::optim::SGD(m.parameters(), 1e-4);
+    auto optim = torch::optim::Adam(m.parameters(), 2e-4);
 
     for (int i = 0; i < nb_epoch; i++) {
 
@@ -142,8 +148,15 @@ void test_cifar() {
     }
 }
 
+void test_libtorch_version() {
+    std::cout << "cuDNN : " << torch::cuda::cudnn_is_available() << std::endl;
+    std::cout << "CUDA : " << torch::cuda::is_available() << std::endl;
+    std::cout << "Device count : " << torch::cuda::device_count() << std::endl;
+}
+
 int main() {
     //test_load_mnist();
     //test_tensor();
     test_cifar();
+    //test_libtorch_version();
 }
