@@ -33,7 +33,8 @@ struct CIFAR_ConvNet : torch::nn::Module {
         int c2_ft_m = 32;
 
         linear_dim = int(
-                pow(int(int(((32.0 - (conv_kernel_sizes[0] - 1.0)) / float(maxpool_size[0])) - (conv_kernel_sizes[1] - 1.0))
+                pow(int(int(((32.0 - (conv_kernel_sizes[0] - conv_kernel_sizes[0] % 2))
+                / float(maxpool_size[0])) - (conv_kernel_sizes[1] - conv_kernel_sizes[1] % 2))
                 / float(maxpool_size[1])), 2.0)
                 * c2_ft_m);
 
@@ -44,31 +45,35 @@ struct CIFAR_ConvNet : torch::nn::Module {
                 torch::nn::Conv2d(torch::nn::Conv2dOptions(c1_ft_m, c2_ft_m,
                         {conv_kernel_sizes[1], conv_kernel_sizes[1]})));
 
-        l1 = register_module("l1", torch::nn::Linear(linear_dim, nb_class));
+        l1 = register_module("l1", torch::nn::Linear(linear_dim, linear_dim * 2));
+        l2 = register_module("l2", torch::nn::Linear(linear_dim * 2, nb_class));
     }
 
     torch::Tensor forward(torch::Tensor x) {
-        x = torch::relu(torch::max_pool2d(c1->forward(x),
+        x = torch::elu(torch::max_pool2d(c1->forward(x),
                 {maxpool_size[0], maxpool_size[0]},
                 {maxpool_size[0], maxpool_size[0]}));
 
-        x = torch::relu(torch::max_pool2d(c2->forward(x),
+        x = torch::elu(torch::max_pool2d(c2->forward(x),
                 {maxpool_size[1], maxpool_size[1]},
                 {maxpool_size[1], maxpool_size[1]}));
 
         x = x.flatten(1, -1);
 
         x = l1->forward(x);
+        x = torch::elu(x);
+        x = l2->forward(x);
+
         x = torch::softmax(x, 1);
 
         return x;
     }
 
     torch::nn::Conv2d c1{nullptr}, c2{nullptr};
-    torch::nn::Linear l1{nullptr};
+    torch::nn::Linear l1{nullptr}, l2{nullptr};
 
     int linear_dim, nb_class = 10;
-    int conv_kernel_sizes[2]{5, 5};
+    int conv_kernel_sizes[2]{3, 3};
     int maxpool_size[2]{2, 2};
 };
 
