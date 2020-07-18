@@ -5,7 +5,6 @@ set(CMAKE_PREFIX_PATH "/opt/libtorch")
 
 find_package(Torch REQUIRED)
 
-set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 file(GLOB_RECURSE SRC "src/*.cpp" "src/*.c")
